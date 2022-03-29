@@ -1,12 +1,6 @@
 import random
 import math
 
-#initialization
-chr_size = 8
-pop_size = 8
-pc = 0.8
-pm = 0.2
-
 def generateChromosom(chr_size):
     result = []
     for _ in range(chr_size):
@@ -47,15 +41,16 @@ def fitness(population, chr_size):
         result.append(function(*decodeChromosome(i, chr_size)))
     return result
     
-def RouletteWheel(populasi ,pop_size, fitness):
+def RouletteWheel(population ,pop_size, fitness):
     indv = 0
     val = random.uniform(0, 1)
     totalfitness = sum(fitness)
     for i in range(pop_size):
         if (fitness[i] / totalfitness) > val:
             indv = i
+            break
         i += 1
-    return populasi[indv]
+    return population[indv]
 
 def crossover(parentA, parentB, pc, chr_size):
     val = random.uniform(0, 1)
@@ -73,15 +68,71 @@ def mutation(offsprings, pm, chr_size):
         offsprings
     return offsprings
 
-def elitism(fitness):
-    fitness.sort()
-    idx1 = fitness[0]
-    idx2 = fitness[1]
+def elitism(fit):
+    idx1, idx2 = 0, 0
+    for i in range(1, len(fit)):
+        if fit[i] < fit[idx1]:
+            idx2 = idx1
+            idx1 = i
     return [idx1, idx2]
 
+def generationalReplacement():
+    #initialization
+    chr_size, pop_size, pc, pm, generation = (8, 100, 0.8, 0.2, 1000)
+    population = generatePopulation(pop_size, chr_size)
+    for _ in range(generation):
+        fit = fitness(population, chr_size)
+        newPopulation = []
+        elite1, elite2 = elitism(fit)
+        newPopulation.append(population[elite1])
+        newPopulation.append(population[elite2])
+        for _ in range(0, pop_size - 2, 2):
+            parentA = RouletteWheel(population, pop_size, fit)
+            parentB = RouletteWheel(population, pop_size, fit)
+            while(parentA == parentB):
+                 parentB = RouletteWheel(population, pop_size, fit)
+            offsprings = crossover(parentA[:], parentB[:], pc, chr_size)
+            offsprings = mutation(offsprings, pm, chr_size)
+            newPopulation.append(offsprings[0])
+            newPopulation.append(offsprings[1])
+        population = newPopulation
+    printNilaiMin(population, chr_size, fit)
 
-# temp = generatePopulation(pop_size, chr_size)
+
+
+def printNilaiMin(population, chr_size, fit):
+    idx = fit.index(min(fit))
+    decode = decodeChromosome(population[idx], chr_size)
+
+    print("===============Hasil Genetic Algorithm===============")
+    print("Kromosom terbaik\t: ", population[idx])
+    print("Nilai fitness\t\t: ", fit[idx])
+    print("Nilai X\t\t\t: ", decode)
+    
+
+generationalReplacement()
+
+
+
+
+
+
+
+
+# chr_size = 8
+# pc = 0.8
+# pm = 0.2
+# temp = generatePopulation(10, chr_size)
+# # temp2 = decodeChromosome(temp[0], 8)
+# # print(temp2)
 # fit = fitness(temp, chr_size)
+# # idx = fit.index(min(fit))
+
+# # print(idx)
+
+# # temp3 = decodeChromosome(temp[idx], 8)
+
+# # print(temp3)
 # p1 = RouletteWheel(temp, chr_size, fit)
 # p2 = RouletteWheel(temp, chr_size, fit)
 # while (p1 == p2) :
@@ -107,3 +158,11 @@ def elitism(fitness):
 
 # elit = elitism(fit)
 # print(elit)
+
+# idx = fit.index(min(fit))
+# decode = decodeChromosome(temp[idx], chr_size)
+
+# print("===============Hasil Genetic Algorithm===============")
+# print("Kromosom terbaik\t: ", temp[idx])
+# print("Nilai fitness\t\t: ", fit[idx])
+# print("Nilai X\t\t\t: ", decode)
