@@ -1,5 +1,7 @@
 import random
 import math
+import time
+start_time = time.time()
 
 def generateChromosom(chr_size):
     result = []
@@ -25,10 +27,8 @@ def decodeChromosome(chromosome, chr_size):
     for i in range(0, n):
         x += chromosome[i] * 2 ** -(i+1)
         y += chromosome[n + i] * 2 ** -(i+1)
-    x *= (xMax - xMin / N)
-    y *= (yMax - yMin / N)
-    x += xMin
-    y += yMin
+    x = xMin + ((xMax - xMin) / N) * x
+    y = yMin + ((yMax - yMin) / N) * y
     
     return [x, y]
 
@@ -41,6 +41,14 @@ def fitness(population, chr_size):
         result.append(function(*decodeChromosome(i, chr_size)))
     return result
     
+def tournament(population, pop_size, tour_size, chr_size):
+    result = []
+    for _ in range(tour_size):
+        temp = population[random.randint(0, pop_size - 1)]
+        if result == [] or function(decodeChromosome(temp, chr_size)[0], decodeChromosome(temp, chr_size)[0]) > function(decodeChromosome(result, chr_size)[0], decodeChromosome(result, chr_size)[0]):
+            result = temp
+    return result
+
 def RouletteWheel(population ,pop_size, fitness):
     indv = 0
     val = random.uniform(0, 1)
@@ -65,7 +73,6 @@ def mutation(offsprings, pm, chr_size):
     if val < pm:
         offsprings[0][random.randint(0, chr_size - 1)] = random.randint(0,1) 
         offsprings[1][random.randint(0, chr_size - 1)] = random.randint(0,1) 
-        offsprings
     return offsprings
 
 def elitism(fit):
@@ -78,7 +85,8 @@ def elitism(fit):
 
 def generationalReplacement():
     #initialization
-    chr_size, pop_size, pc, pm, generation = (8, 100, 0.8, 0.2, 1000)
+    chr_size, pop_size, pc, pm, generation = (16, 150, 0.8, 0.2, 1000)
+    tour_size = 5 # Khusus tournamentSelection
     population = generatePopulation(pop_size, chr_size)
     for _ in range(generation):
         fit = fitness(population, chr_size)
@@ -87,15 +95,20 @@ def generationalReplacement():
         newPopulation.append(population[elite1])
         newPopulation.append(population[elite2])
         for _ in range(0, pop_size - 2, 2):
+                    # Menggunakan Tournament Selection
+            # parentA = tournament(population, pop_size, tour_size, chr_size)
+            # parentB = tournament(population, pop_size, tour_size, chr_size)
+            # while(parentA == parentB):
+            #     parentB = tournament(population, pop_size, tour_size, chr_size)  
+                    # Menggunakan Roulette Wheel Selection
             parentA = RouletteWheel(population, pop_size, fit)
             parentB = RouletteWheel(population, pop_size, fit)
             while(parentA == parentB):
-                 parentB = RouletteWheel(population, pop_size, fit)
+                parentB = RouletteWheel(population, pop_size, fit)
             offsprings = crossover(parentA[:], parentB[:], pc, chr_size)
             offsprings = mutation(offsprings, pm, chr_size)
-            newPopulation.append(offsprings[0])
-            newPopulation.append(offsprings[1])
-        population = newPopulation
+            newPopulation.extend(offsprings)
+    population = newPopulation
     printNilaiMin(population, chr_size, fit)
 
 
@@ -107,62 +120,50 @@ def printNilaiMin(population, chr_size, fit):
     print("===============Hasil Genetic Algorithm===============")
     print("Kromosom terbaik\t: ", population[idx])
     print("Nilai fitness\t\t: ", fit[idx])
-    print("Nilai X\t\t\t: ", decode)
+    print("Nilai X\t\t\t: ", decode[0])
+    print("Nilai y\t\t\t: ", decode[1])
+
     
 
 generationalReplacement()
+print("Process finished --- %s seconds ---" % (time.time() - start_time))
+
+# ======================Roulette Wheel Selection======================
+
+# Test dengan chr_size = 8, pop_size = 100:
+# ===============Hasil Genetic Algorithm===============
+# Kromosom terbaik        :  [0, 1, 1, 1, 1, 0, 1, 1]
+# Nilai fitness           :  1.3455611681304287e-05
+# Nilai X                 :  -0.3333333333333339
+# Nilai y                 :  2.333333333333333
+# Process finished --- 1.494236707687378 seconds ---
 
 
+# Test dengan chr_size = 16, pop_size = 150:
+# ===============Hasil Genetic Algorithm===============
+# Kromosom terbaik        :  [0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0]
+# Nilai fitness           :  1.1010545647825181e-06
+# Nilai X                 :  -4.529411764705882
+# Nilai y                 :  -1.3137254901960786
+# Process finished --- 3.4147183895111084 seconds ---
+#=======================================================================
 
 
+# =========================Tournament Selection=========================
+
+# Test dengan chr_size = 8, pop_size = 100, tour_size = 4:
+# ===============Hasil Genetic Algorithm===============
+# Kromosom terbaik        :  [1, 0, 0, 1, 1, 0, 1, 0]
+# Nilai fitness           :  3.926735296540477e-05
+# Nilai X                 :  1.0
+# Nilai y                 :  1.666666666666666
+# Process finished --- 6.051281213760376 seconds ---
 
 
-
-
-# chr_size = 8
-# pc = 0.8
-# pm = 0.2
-# temp = generatePopulation(10, chr_size)
-# # temp2 = decodeChromosome(temp[0], 8)
-# # print(temp2)
-# fit = fitness(temp, chr_size)
-# # idx = fit.index(min(fit))
-
-# # print(idx)
-
-# # temp3 = decodeChromosome(temp[idx], 8)
-
-# # print(temp3)
-# p1 = RouletteWheel(temp, chr_size, fit)
-# p2 = RouletteWheel(temp, chr_size, fit)
-# while (p1 == p2) :
-#     p2 = RouletteWheel(temp, chr_size, fit)
-# offsprings = crossover(p1[:], p2[:], pc, chr_size)
-
-# print (temp)
-# print ("------------------------------------------------------")
-
-# print (p1)
-# print (p2)
-
-# print ("------------------------------------------------------")
-
-# print(offsprings)
-
-# print ("------------------------------------------------------")
-
-# mutasi = mutation(offsprings, pm, chr_size)
-# print(mutasi)
-
-# print ("------------------------------------------------------")
-
-# elit = elitism(fit)
-# print(elit)
-
-# idx = fit.index(min(fit))
-# decode = decodeChromosome(temp[idx], chr_size)
-
-# print("===============Hasil Genetic Algorithm===============")
-# print("Kromosom terbaik\t: ", temp[idx])
-# print("Nilai fitness\t\t: ", fit[idx])
-# print("Nilai X\t\t\t: ", decode)
+# Test dengan chr_size = 16, pop_size = 150, tour_size = 5:
+# ===============Hasil Genetic Algorithm===============
+# Kromosom terbaik        :  [0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+# Nilai fitness           :  1.3917991868080088e-06
+# Nilai X                 :  -1.6274509803921569
+# Nilai y                 :  -4.7254901960784315
+# Process finished --- 17.66501498222351 seconds ---
