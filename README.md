@@ -5,4 +5,4 @@ Member :
 - Muhammad Rafid Mustaghfirin | 1301200417
 
 Video : https://youtu.be/YBA9M5wU48M
-Laporan : https://docs.google.com/document/d/1nG0ItvCd9Wm-kkaGX3g8jsgBiTTv--wHTiY0w5OxGlU/edit
+
